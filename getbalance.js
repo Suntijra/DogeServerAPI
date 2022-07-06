@@ -11,13 +11,19 @@
 
 /* Copy config.json.template to config.json and fill in your
  * rpc username and password. */
-var config = require('config.json');
+// var config = require('config.json');
 
+// var dogecoin = require('node-dogecoin')({
+//       host: config.rpchost,
+//       port: config.rpcport,
+//       user: config.rpcuser,
+//       pass: config.rpcpassword
+//     });
 var dogecoin = require('node-dogecoin')({
-      host: config.rpchost,
-      port: config.rpcport,
-      user: config.rpcuser,
-      pass: config.rpcpassword
+      host: "127.0.0.1",
+      port: 22555,
+      user: "dom",
+      pass: "dom123"
     });
 
 dogecoin.getBalance(function(err, balance) {
