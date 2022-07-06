@@ -11,7 +11,7 @@
 
 /* Copy config.json.template to config.json and fill in your
  * rpc username and password. */
-var config = require('config');
+var config = require('config.json');
 
 var dogecoin = require('node-dogecoin')({
       host: config.rpchost,
