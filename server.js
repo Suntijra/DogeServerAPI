@@ -12,6 +12,7 @@ app.use(cors())
 app.listen(port, () => console.log(`Listening on port ${port}`))
 
 app.get('/testget',(req,resp)=>{
+    console.log('can be test')
     try{
         return resp.status(200).json({
             message: 'ok'
