@@ -21,12 +21,12 @@
 //     });
 var dogecoin = require('node-dogecoin')({
       host: "127.0.0.1",
-      port: 22555,
+      port: 44555,
       user: "dom",
       pass: "dom123"
     });
 
-    console.log('Connecting to dogecoin daemon...');
+    conslsole.log('Connecting to dogecoin daemon...');
   console.log('test get balance');
   dogecoin.getBalance(function(err, balance) {
   if (err) {
