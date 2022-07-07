@@ -26,7 +26,7 @@ var dogecoin = require('node-dogecoin')({
       pass: "dom123"
     });
 
-    conslsole.log('Connecting to dogecoin daemon...');
+    console.log('Connecting to dogecoin daemon...');
   console.log('test get balance');
   dogecoin.getBalance(function(err, balance) {
   if (err) {
