@@ -26,9 +26,18 @@ var dogecoin = require('node-dogecoin')({
       pass: "dom123"
     });
 
-dogecoin.getBalance(function(err, balance) {
+    console.log('Connecting to dogecoin daemon...');
+  console.log('test get balance');
+  dogecoin.getBalance(function(err, balance) {
   if (err) {
     return console.error('Failed to fetch balance', err.message);
   }
   console.log('DOGE balance is', balance);
 });
+console.log('get new address');
+dogecoin.getNewAddress(function(err, address) {
+  if (err) {
+    return console.error('Failed to fetch new address', err.message);
+  }
+  console.log('New address is', address);
+})
