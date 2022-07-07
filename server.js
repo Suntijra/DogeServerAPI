@@ -21,6 +21,9 @@ app.get('/testget',(req,resp)=>{
         console.log('---------------------------------')
         console.log('getBalance')
         getBalance()
+        console.log('---------------------------------')
+        getaccountaddress()
+        console.log('---------------------------------')
         return resp.status(200).json({
             message: 'ok'
         })
@@ -38,4 +41,13 @@ function getBalance(){
         }
         console.log('DOGE balance is', balance);
       });
+}
+function getaccountaddress(){
+    nodeDoge.getaccountaddress((err, address) => {
+        if (err) {
+          return console.error('Failed to fetch address', err.message);
+        }
+        console.log('DOGE address is', address);
+      }
+    )
 }
