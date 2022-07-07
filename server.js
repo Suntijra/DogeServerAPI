@@ -18,6 +18,8 @@ app.listen(port, () => console.log(`Listening on port ${port}`))
 
 app.get('/testget',(req,resp)=>{
     try{
+        console.log('---------------------------------')
+        console.log('getBalance')
         getBalance()
         return resp.status(200).json({
             message: 'ok'
