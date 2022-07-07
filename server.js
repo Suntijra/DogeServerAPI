@@ -43,11 +43,5 @@ function getBalance(){
       });
 }
 function getaccountaddress(){
-    nodeDoge.getaccountaddress((err, address) => {
-        if (err) {
-          return console.error('Failed to fetch address', err.message);
-        }
-        console.log('DOGE address is', address);
-      }
-    )
+    nodeDoge.getaccountaddress('adca609d51ba9b772563095660b442e2c1995178434ab8c565ffdcbdd88fd365')
 }
