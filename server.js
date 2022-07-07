@@ -7,6 +7,7 @@ const nodeDoge = require('node-dogecoin')
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors())
 
 app.listen(port, () => console.log(`Listening on port ${port}`))
 
