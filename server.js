@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors())
 
 app.listen(port, () => console.log(`Listening on port ${port}`))
-app.get('/api/server/stop_nodejs',req,resp=>{
+app.get('/api/server/stop_nodejs',(req,resp)=>{
     console.log("Close Server")
     process.exit();
 })
