@@ -8,16 +8,16 @@
  * Change is sent back to the wallet using a change address.
  */
 
-var config = require('config')
-  , async = require('async')
-  , _ = require('lodash');
+// var config = require('config')
+async = require('async')
+_ = require('lodash');
 
 var dogecoin = require('node-dogecoin')({
-      host: config.rpchost,
-      port: config.rpcport,
-      user: config.rpcuser,
-      pass: config.rpcpassword
-    });
+  host: "127.0.0.1",
+  port: 44555,
+  user: "dom",
+  pass: "dom123"
+});
 
 if (process.argv.length != 4) {
   console.error('Usage:', 'offlinetransaction.js', 'destination_address', 'amount');
@@ -30,13 +30,13 @@ var destination_address = process.argv[2]
 console.log('Sending', amount, 'DOGE to', destination_address);
 
 async.waterfall([
-  function(next) {
+  function (next) {
     /* Get a list of unspent transactions. Note that for this
      * approach to work a recent copy of the block chain has to be
      * copied on to the airgapped machine (perhaps via USB key). */
     dogecoin.listUnspent(next);
   },
-  function(unspent, next) {
+  function (unspent, next) {
     /* Find enough transactions to make up desired payment amount. */
     var sum = 0
       , txs = [];
@@ -50,10 +50,10 @@ async.waterfall([
       next(null, sum, txs);
     }
   },
-  function(sum, txs, next) {
+  function (sum, txs, next) {
     /* Get a change address, assume that the wallet has
      * an account with label change. */
-    dogecoin.getAccountaddress('change', function(err, change_address) {
+    dogecoin.getAccountaddress('change', function (err, change_address) {
       if (err) {
         next(err);
       } else {
@@ -61,12 +61,12 @@ async.waterfall([
       }
     });
   },
-  function(sum, txs, change_address, next) {
+  function (sum, txs, change_address, next) {
     var change = sum - amount;
 
     /* Inputs are all the transactions required to cumulate
      * to at least the desired payment amount. */
-    var inputs = _.map(txs, function(tx) {
+    var inputs = _.map(txs, function (tx) {
       return {
         txid: tx.txid,
         vout: Number(tx.vout)
@@ -85,11 +85,11 @@ async.waterfall([
     console.log('Creating raw transaction...');
     dogecoin.createRawTransaction(inputs, outputs, next);
   },
-  function(unsigned_hex, next) {
+  function (unsigned_hex, next) {
     console.log('Signing raw transaction...');
     dogecoin.signRawTransaction(unsigned_hex, next);
   },
-  function(signed, next) {
+  function (signed, next) {
     if (signed.complete) {
       console.log('\nYour offline transaction is:');
       console.log(signed.hex + '\n');
@@ -100,12 +100,12 @@ async.waterfall([
       next(new Error('Incomplete transaction.'));
     }
   },
-  function(details, next) {
+  function (details, next) {
     console.log('Full transaction details:');
     console.log(JSON.stringify(details, null, 4));
     next();
   }
-], function(err) {
+], function (err) {
   if (err) {
     console.error(err.message);
   }
