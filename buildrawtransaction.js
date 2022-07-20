@@ -22,21 +22,23 @@
 
 var dogecoin = require('node-dogecoin')({
   host: "127.0.0.1",
-  port: 22555,
+  port: 44555,
   user: "dom",
   pass: "dom123"
 });
+
 var tx = {
-  txid: '2d59d45d1f9517f6027020789ba23308b0dde3da80751caa197dcae840685b10',
-  vout: 1,
-  amount: 1,
-  public_address: 'DHETbzrTVBMxEnynWSP6Jq9p2UKBjVTxY4',
-  private_key: 'QWb8UQRFf2SoYDsMioSiuxwaCRmndxUmQRVZ3mkkWpfzbDvE1tpa'
+  txid: 'bb84a2017ecc49a6f3986fd5c861f5895443a50f82041fe0799a05599179b3d1',
+  vout: 0,
+  amount:15,
+  public_address: 'nVaE4P47DsYF5RSN4jjvak8YNLq5Q85ZPH',
+  private_key: 'ciwZ6PuDVkYhCYv3zxP1gSAeCUnz3FczvUxnDNGjm1QdDatgUa9e'
 };
 
 /* We create a transaction spending the above transaction to this
  * destination public address. */
-var destination_address = '9ziie3L6Qc2QWyc8bQDgMsxccd8cjEJkB7';
+
+var destination_address = 'nVaE4P47DsYF5RSN4jjvak8YNLq5Q85ZPH';
 
 async.waterfall([
   function (next) {
@@ -50,7 +52,9 @@ async.waterfall([
      * send to that address. */
     var outputs = {};
     /* Leave one DOGE unspent as transaction fee. */
+    // [{"txid":txid,"vout":n},...] {address:amount,...}
     outputs[destination_address] = tx.amount - 1;
+    outputs[tx.public_address] = 
 
     dogecoin.createRawTransaction(inputs, outputs, next);
   },
