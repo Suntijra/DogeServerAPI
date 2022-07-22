@@ -85,7 +85,7 @@ app.post("/api/GetRawtransection", (req, resp) => {
     });
 
   } catch (error) {
-
+    console.log(error)
   }
 }
 
@@ -121,6 +121,40 @@ app.get('/api/getallbal', async (req, resp) => {
     })
   }
 
+})
+
+app.post("/api/createAddressByUser", (req, resp) => {
+  try {
+    let user = req.body.username;
+    console.log('user:', user)
+    nodeDoge.getnewaddress(user)
+    return resp.status(200).json({ status: 'success', "username": user })
+  } catch (error) {
+    return resp.status(500).json({ status: 'error', message: error.message })
+  }
+})
+
+app.post("/api/getbalanceByUser", (req, resp) => {
+  try {
+    let user = req.body.username;
+    // console.log('user:',user)
+    nodeDoge.getbalance(user,(err, balance) => {
+      if (err) {
+        return resp.status(500).json({ status: 'error', message: err.message })
+      }
+      else {
+        console.log("balance by account:", balance)
+        return resp.status(200).json({
+          message: 'Success',
+          balances: balance,
+          code: "ok"
+        })
+      }
+    })
+    // return resp.status(200).json({ status: 'success' ,"username": user})
+  } catch (error) {
+    return resp.status(500).json({ status: 'error', message: error.message })
+  }
 })
 // async function getBalance() {
 //    await nodeDoge.getBalance( function (err, balance) {
