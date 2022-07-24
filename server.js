@@ -16,7 +16,8 @@ const jwt_secretPk = 'mydogecoin-private-key';
 const app = express()
 const port = 3000
 // const bodyParser = require('body-parser')/
-const cors = require('cors')
+const cors = require('cors');
+const { countBy } = require('lodash');
 const nodeDoge = require('node-dogecoin')({
   host: "127.0.0.1",
   port: 44555,
@@ -167,25 +168,41 @@ app.post('/api/post/login', async (req, res) => {
       // check มี username && pass อยู่ในฐานข้อมูล
       // console.log("token:", token)
       token = jwt.sign({ 'username': user, token: token }, jwtsecret, { expiresIn: '1D' });
-      console.log("token: " + token)
+      // console.log("token: " + token)
       insertToken(token)
       console.log("Insert Token Success")
-      return res.status(200).json({
-        Result: 'Login Success',
-        status: 'success',
-        token: token
+      // console.log('data====>',data[1][0].username)
+      nodeDoge.getaddressesbyaccount(data[1][0].username,(err,count)=>{
+        if(err){
+          console.log(err)
+          return res.status(500).json({
+            status:"err",
+            log:0
+          })
+        }else{
+
+          return res.status(200).json({
+            Result: 'Login Success',
+            status: 'success',
+            token: token,
+            addr_count:count.length,
+            log:1
+          })
+        }
       })
     } else {
       return res.status(200).json({
         Result: 'Login Failed',
-        status: 'error'
+        status: 'error',
+        log:2
       })
     }
   } catch {
     return res.status(400).json({
       Result: 'Server cannot connect to database',
       Code: 404,
-      status: false
+      status: false,
+      log:3
     })
   }
 
@@ -300,7 +317,7 @@ function Registerdb(user, pass, S_reset = false, S_login = true) {
   MongoClient.connect(url, function (err, db) {
     if (err) throw err;
     var dbo = db.db("mydogecoin-wallet");
-    var myobj = { username: user, password: pass, status_reset: S_reset, status_login: S_login };
+    var myobj = { username: user, password: pass, status_reset: S_reset, status_login: S_login};
     dbo.collection("register").insertOne(myobj, function (err, res) {
       if (err) throw err;
       console.log("1 document inserted");
@@ -328,7 +345,7 @@ async function queryToken(token) {
   let dbo = await client.db("mydogecoin-wallet");
   let query = { 'token': token };
   let result = await dbo.collection("token").find(query).toArray();
-  console.log("queryToken: " + JSON.stringify(result));
+  // console.log("queryToken: " + JSON.stringify(result));
   return [result.length, result];
 }
 
@@ -354,7 +371,7 @@ app.get('/api/server/stop_nodejs', (req, resp) => {
   console.log("Close Server")
   process.exit();
 })
-app.post("/api/GetRawtransection", (req, resp) => {
+app.post("/api/Send/Rawtransection", (req, resp) => {
   try {
     let public_address = req.body.address
     nodeDoge.dumpprivkey(public_address)
@@ -473,15 +490,15 @@ app.post("/api/getbalanceByUser", (req, resp) => {
   try {
     let user = req.body.username;
     // console.log('user:',user)
-    nodeDoge.getbalance(user, (err, balance) => {
+    nodeDoge.getreceivedbyaccount(user, (err, received) => {
       if (err) {
         return resp.status(500).json({ status: 'error', message: err.message })
       }
       else {
-        console.log("balance by account:", balance)
+        console.log("balance by account:", received)
         return resp.status(200).json({
           message: 'Success',
-          balances: balance,
+          balances: received,
           code: "ok"
         })
       }
@@ -510,3 +527,68 @@ app.post("/api/getbalanceByUser", (req, resp) => {
 //   }
 //   )
 // }
+
+// =============================================================================================================================================================================================
+
+app.post('/api/admin/sendDoge/anotherOnLocalBalance', (req, res) => {
+  try {
+    let fromaccount = req.body.fromAccount;
+    let toaccount = req.body.toAccount;
+    let amount = req.body.amount;
+    nodeDoge.getbalance(fromaccount, (err, checkbalance) => {
+      if (err) {
+        res.status(404).json({
+          msg: "Failed to send doge not found account ",
+          status: "fail",
+          log: 0
+        });
+      } else if (checkbalance >= amount) {
+        nodeDoge.getaddressesbyaccount(toaccount, (err, address) => {
+          if (err) {
+            res.status(404).json({
+              msg: "Failed to send doge not found account",
+              status: "fail",
+              log: 1
+            });
+          }
+          else {
+            console.log('address===>', address[0])
+            nodeDoge.sendfrom(fromaccount, address[0], amount, (err, txid) => {
+              if (err) {
+                console.error(err);
+                res.status(404).json({
+                  msg: "Failed to send doge on local balance",
+                  status: "fail",
+                  log: 2
+                });
+              } else {
+                res.status(200).json({
+                  status: 'Success',
+                  message: 'Sent doge on local balance',
+                  txid: txid,
+                  log: 3
+                });
+              }
+
+            })
+          }
+        })
+      }
+      else {
+        res.status(400).json({
+          status: 'Failed',
+          message: 'error',
+          log: 4
+        });
+      }
+    })
+
+
+
+  } catch (error) {
+    return res.status(404).json({
+      message: errors,
+      status: 'error',
+    });
+  }
+})

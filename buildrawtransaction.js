@@ -28,9 +28,9 @@ var dogecoin = require('node-dogecoin')({
 });
 
 var tx = {
-  txid: 'bb84a2017ecc49a6f3986fd5c861f5895443a50f82041fe0799a05599179b3d1',
+  txid: 'fdc155943551c7b2bf07fcd2e41a6998505b51ea41c9a1de14fb3c91cbcf1e17',
   vout: 0,
-  amount:15,
+  amount:100,
   public_address: 'nVaE4P47DsYF5RSN4jjvak8YNLq5Q85ZPH',
   private_key: 'ciwZ6PuDVkYhCYv3zxP1gSAeCUnz3FczvUxnDNGjm1QdDatgUa9e'
 };
@@ -38,7 +38,7 @@ var tx = {
 /* We create a transaction spending the above transaction to this
  * destination public address. */
 
-var destination_address = 'nVaE4P47DsYF5RSN4jjvak8YNLq5Q85ZPH';
+var destination_address = 'nVXx424Jn3oXVRZX85BxziTCVFMjfhHmrr';
 
 async.waterfall([
   function (next) {
