@@ -28,18 +28,18 @@ var dogecoin = require('node-dogecoin')({
 });
 
 var tx = {
-  txid: 'fdc155943551c7b2bf07fcd2e41a6998505b51ea41c9a1de14fb3c91cbcf1e17',
+  txid: '4cb6276bfc47283b3f60fe41964b3dfae0c9228ca9989fed04a4c42ac58fb766',
   vout: 0,
-  amount:100,
-  public_address: 'nVaE4P47DsYF5RSN4jjvak8YNLq5Q85ZPH',
-  private_key: 'ciwZ6PuDVkYhCYv3zxP1gSAeCUnz3FczvUxnDNGjm1QdDatgUa9e'
+  amount:5,
+  public_address: 'nZGapnerBV2bppufaXV1sCUkfxMpXF2hu6',
+  private_key: 'chuDyQe6rQyVCnZ8AEFwg68AXghJuCPzEqXwSsPVqjKFKrBZbJKq'
 };
 
 /* We create a transaction spending the above transaction to this
  * destination public address. */
 
-var destination_address = 'nVXx424Jn3oXVRZX85BxziTCVFMjfhHmrr';
-
+// dom4
+var destination_address = 'nUxF5wfXNr6jnoUhHisBBDJcoSeBMCyPx1';
 async.waterfall([
   function (next) {
     /* Inputs is an array of objects specifing the
@@ -54,7 +54,7 @@ async.waterfall([
     /* Leave one DOGE unspent as transaction fee. */
     // [{"txid":txid,"vout":n},...] {address:amount,...}
     outputs[destination_address] = tx.amount - 1;
-    outputs[tx.public_address] = 
+    outputs['nVaE4P47DsYF5RSN4jjvak8YNLq5Q85ZPH'] = 10 - tx.amount
 
     dogecoin.createRawTransaction(inputs, outputs, next);
   },
@@ -69,6 +69,7 @@ async.waterfall([
   },
   function (response, next) {
     if (!response.complete) {
+      console.log(response)
       next(new Error('Incomplete transaction'));
     } else {
       console.log('Raw signed transaction', response.hex);

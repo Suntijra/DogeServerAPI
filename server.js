@@ -1,21 +1,15 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const _ = require('lodash')
-// const router = require('./router/Router')
-// const app = express()
 const axios = require('axios').default;
 const MD5 = require('js-md5');
 var jwt = require('jsonwebtoken');
-// var cors = require('cors')
 const jwtsecret = 'Unitdogecoin-wallet';
-// const port = 8000
 const WAValidator = require('wallet-address-validator');
 const { request } = require('express');
 const jwt_secretPk = 'mydogecoin-private-key';
-// const express = require('express')
 const app = express()
 const port = 3000
-// const bodyParser = require('body-parser')/
 const cors = require('cors');
 const { countBy } = require('lodash');
 const nodeDoge = require('node-dogecoin')({
@@ -172,21 +166,21 @@ app.post('/api/post/login', async (req, res) => {
       insertToken(token)
       console.log("Insert Token Success")
       // console.log('data====>',data[1][0].username)
-      nodeDoge.getaddressesbyaccount(data[1][0].username,(err,count)=>{
-        if(err){
+      nodeDoge.getaddressesbyaccount(data[1][0].username, (err, count) => {
+        if (err) {
           console.log(err)
           return res.status(500).json({
-            status:"err",
-            log:0
+            status: "err",
+            log: 0
           })
-        }else{
+        } else {
 
           return res.status(200).json({
             Result: 'Login Success',
             status: 'success',
             token: token,
-            addr_count:count.length,
-            log:1
+            addr_count: count.length,
+            log: 1
           })
         }
       })
@@ -194,7 +188,7 @@ app.post('/api/post/login', async (req, res) => {
       return res.status(200).json({
         Result: 'Login Failed',
         status: 'error',
-        log:2
+        log: 2
       })
     }
   } catch {
@@ -202,7 +196,7 @@ app.post('/api/post/login', async (req, res) => {
       Result: 'Server cannot connect to database',
       Code: 404,
       status: false,
-      log:3
+      log: 3
     })
   }
 
@@ -317,7 +311,7 @@ function Registerdb(user, pass, S_reset = false, S_login = true) {
   MongoClient.connect(url, function (err, db) {
     if (err) throw err;
     var dbo = db.db("mydogecoin-wallet");
-    var myobj = { username: user, password: pass, status_reset: S_reset, status_login: S_login};
+    var myobj = { username: user, password: pass, status_reset: S_reset, status_login: S_login };
     dbo.collection("register").insertOne(myobj, function (err, res) {
       if (err) throw err;
       console.log("1 document inserted");
@@ -490,7 +484,7 @@ app.post("/api/getbalanceByUser", (req, resp) => {
   try {
     let user = req.body.username;
     // console.log('user:',user)
-    nodeDoge.getreceivedbyaccount(user, (err, received) => {
+    nodeDoge.getbalance(user, (err, received) => {
       if (err) {
         return resp.status(500).json({ status: 'error', message: err.message })
       }
@@ -590,5 +584,85 @@ app.post('/api/admin/sendDoge/anotherOnLocalBalance', (req, res) => {
       message: errors,
       status: 'error',
     });
+  }
+})
+//sendFrom
+app.post('/api/sendFrom/', (req, res) => {
+  try {
+    let token = req.body.token;
+    let decoded = jwt.verify(token, jwtsecret);
+    console.log("decoded username:", decoded.username)
+    let fromaccount = decoded.username
+    let toaccount = req.body.address;
+    let amount = req.body.amount;
+
+    nodeDoge.sendfrom(fromaccount, toaccount, amount, (err, txid) => {
+      if (err) {
+        return res.status(400).json({
+          status: 'Failed',
+          msg: "can't send transaction",
+          log: 0
+
+        })
+      } else {
+        console.log("sent from account: " + fromaccount, " ===> ", fromaccount)
+        return res.status(200).json({
+          status: 'Success',
+          txid: txid,
+          log: 1
+        })
+      }
+
+    })
+  } catch (error) {
+    return res.status(404).json({ error: error, msg: "can't send from server", log: 2 });
+  }
+})
+
+app.post('/api/listaddress/', (req, res) => {
+  try {
+    let token = req.body.token;
+    let decoded = jwt.verify(token, jwtsecret);
+    // console.log("decoded username:", decoded.username)
+    let toaccount = decoded.username
+    nodeDoge.getaddressesbyaccount(toaccount, (err, listaddress) => {
+      if (err) {
+        return res.status(400).json({
+          status: 'error', message: err, log: 1
+        });
+      } else {
+        return res.status(200).json({
+          status: 'ok', listaddr: listaddress, log: 0
+        })
+      }
+    })
+  } catch (error) {
+    return res.status(404).json({
+      error: error, msg: "server error",
+      log: 3
+    })
+  }
+})
+
+app.post("/api/getnewaddress", function (req, res) {
+  try {
+    let token = req.body.token;
+    let decoded = jwt.verify(token, jwtsecret);
+    nodeDoge.getnewaddress(decoded.username, (err, newAddr) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).json({ status: 'new address fail', message: err ,log:0});
+      } else {
+        return res.status(200).json({
+          status: 'success', newAddr: newAddr,log:1
+        })
+      }
+    })
+  }
+  catch (err) {
+    return res.status(404).json({
+      error: error, msg: "server error",
+      log: 5
+    })
   }
 })

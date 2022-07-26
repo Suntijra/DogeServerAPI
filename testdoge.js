@@ -1,8 +1,16 @@
 var dogecoin = require('node-dogecoin')({
     host: "127.0.0.1",
-    port: 22555,
+    port: 44555,
     user: "dom",
     pass: "dom123"
   });
-
-  dogecoin.getbalance("DHETbzrTVBMxEnynWSP6Jq9p2UKBjVTxY4")
+var WIF = ""
+  dogecoin.dumpprivkey('ng85Qfyw8cvVsvYuBx3e33bNytNHKRxgx8',function(err,wif){
+    if (err) {
+      console.log(err);
+    }else{
+      // console.log("WIF is : " + wif);
+      WIF = wif;
+    }
+  })
+  console.log("WIF is : " + WIF);

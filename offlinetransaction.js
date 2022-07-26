@@ -19,13 +19,13 @@ var dogecoin = require('node-dogecoin')({
   pass: "dom123"
 });
 
-if (process.argv.length != 4) {
-  console.error('Usage:', 'offlinetransaction.js', 'destination_address', 'amount');
-  process.exit(1);
-}
+// if (process.argv.length != 4) {
+//   console.error('Usage:', 'offlinetransaction.js', 'destination_address', 'amount');
+//   process.exit(1);
+// }
 
-var destination_address = process.argv[2]
-  , amount = Number(process.argv[3]);
+var destination_address = 'nVaE4P47DsYF5RSN4jjvak8YNLq5Q85ZPH'
+  , amount = 10
 
 console.log('Sending', amount, 'DOGE to', destination_address);
 
@@ -53,7 +53,7 @@ async.waterfall([
   function (sum, txs, next) {
     /* Get a change address, assume that the wallet has
      * an account with label change. */
-    dogecoin.getAccountaddress('change', function (err, change_address) {
+    dogecoin.getaccountaddress('change', function (err, change_address) {
       if (err) {
         next(err);
       } else {
