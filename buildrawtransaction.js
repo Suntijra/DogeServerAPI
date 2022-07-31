@@ -28,9 +28,9 @@ var dogecoin = require('node-dogecoin')({
 });
 
 var tx = {
-  txid: '4cb6276bfc47283b3f60fe41964b3dfae0c9228ca9989fed04a4c42ac58fb766',
-  vout: 0,
-  amount:5,
+  txid: '8bb0258160737d05114ec169c3d015a4a4efca8e1ac3a11de0a1b67b82c82df2',
+  vout: 1,
+  amount:10,
   public_address: 'nZGapnerBV2bppufaXV1sCUkfxMpXF2hu6',
   private_key: 'chuDyQe6rQyVCnZ8AEFwg68AXghJuCPzEqXwSsPVqjKFKrBZbJKq'
 };
@@ -39,7 +39,7 @@ var tx = {
  * destination public address. */
 
 // dom4
-var destination_address = 'nUxF5wfXNr6jnoUhHisBBDJcoSeBMCyPx1';
+var destination_address = '2N3vq1Uv9upfudXokCfFkmZoEX7cihFfvMa';
 async.waterfall([
   function (next) {
     /* Inputs is an array of objects specifing the
