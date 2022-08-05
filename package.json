@@ -22,8 +22,10 @@
   "dependencies": {
     "async": "^3.2.4",
     "axios": "^0.27.2",
+    "binascii": "^0.0.2",
     "bip39": "^3.0.4",
     "body-parser": "^1.20.0",
+    "bs58": "^5.0.0",
     "cors": "^2.8.5",
     "express": "^4.18.1",
     "jquery": "^3.6.0",
