@@ -10,7 +10,6 @@ const port = 3000
 const cors = require('cors');
 const bip39 = require('bip39')
 const bs58 = require('bs58');
-const { data } = require('jquery');
 const nodeDoge = require('node-dogecoin')({
   host: "127.0.0.1",
   port: 44555,
@@ -198,8 +197,7 @@ app.post('/api/post/create-wallet', async (req, res) => {
   try {
     let token = req.body.token;
     let decoded = jwt.verify(token, jwtsecret);
-    console.log("decoded username:", decoded.account)
-
+    // console.log("decoded username:", decoded.account)
     nodeDoge.listaccounts(async (err, accountlist) => {
       if (err) {
         return res.status(500).json({})
@@ -217,7 +215,7 @@ app.post('/api/post/create-wallet', async (req, res) => {
       if (await checkacc()) {
         nodeDoge.getnewaddress(decoded.account, (err, pukey) => {
           if (err) return res.status(400).json({ msg: "can not make account", log: -1 })
-          console.log("pukey,", pukey)
+          // console.log("pukey,", pukey)
           nodeDoge.getaddressesbyaccount(decoded.account, (err, count) => {
             if (err) return res.status(400).json({ msg: "can not make address", log: -3 })
             if (count.length > 1) return res.status(400).json({ msg: "can not make address", log: -4 })
@@ -250,6 +248,7 @@ app.post('/api/post/create-wallet', async (req, res) => {
                       log: 1
                     })
                 }
+                // console.log('mnemonic',mnemonic)
                 updateMnemonic(mnemonic)
               })
             }
@@ -266,6 +265,157 @@ app.post('/api/post/create-wallet', async (req, res) => {
     return res.status(500).json({ status: 'fail', error: error, msg: 'Server cannot connect to database' })
   }
 })
+app.post('/api/access/token/web', async (req, res) => {
+  try {
+    console.log("/api/access/token/web")
+    let date = new Date()
+    let account_name = MD5("" + date.getTime() + (Math.random() * 10000000));
+    console.log(account_name)
+    return res.status(200).json({
+      msg: "success",
+      token: account_name
+    })
+  } catch (e) {
+    console.log(e)
+    return res.status(404).json({ msg: "api catch" })
+  }
+})
+app.post('/api/post/createwallet/wab', async (req, res) => {
+  console.log('/api/post/create-wallet/web')
+  try {
+    let token = req.body.token;
+
+    console.log("token :", token)
+    nodeDoge.listaccounts(async (err, accountlist) => {
+      if (err) {
+        return res.status(500).json({ msg: "listaccount" })
+      }
+      checkacc = async () => {
+        let listacc = Object.keys(accountlist)
+        let newacc = token
+        for (i in listacc) {
+          if (listacc[i] == newacc && accountlist[listacc[i]] != 0) {
+            return false
+          }
+        }
+        return true
+      }
+      if (await checkacc()) {
+        nodeDoge.getnewaddress(token, (err, pukey) => {
+          if (err) return res.status(400).json({ msg: "can not make account", log: -1 })
+          // console.log("pukey,", pukey)
+          nodeDoge.getaddressesbyaccount(token, (err, count) => {
+            if (err) return res.status(400).json({ msg: "can not make address", log: -3 })
+            if (count.length > 1) return res.status(400).json({ msg: "can not make address", log: -4 })
+            else {
+              nodeDoge.dumpprivkey(pukey, (err, privkey) => {
+                if (err) throw res.status(400).json({ msg: "can not dumpprivkey", log: -2 })
+                const address = privkey
+                const bytes = bs58.decode(address)
+                first_encode = Buffer.from(bytes).toString('hex')
+                private_key_full = first_encode.slice(2, -10)
+                console.log(private_key_full)
+                const mnemonic = bip39.entropyToMnemonic(private_key_full)
+                nodeDoge.sendfrom("admin", pukey, 2, (err, txids) => {
+                  if (err) throw res.status(500).json({ msg: "sendfrom err" })
+                  else {
+                    res.status(200).json({
+                      msg: "success",
+                      txid: txids,
+                      log: 1
+                    })
+                  }
+                })
+              })
+            }
+          })
+        })
+      }
+      else {
+        res.status(500).json({ status: 'fail', msg: 'please back to register again' })
+      }
+    })
+
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ status: 'fail', error: error, msg: 'Server cannot connect to database' })
+  }
+})
+
+app.post("/get/publickey", (req, res) => {
+  try {
+    let account = req.body.keys
+    nodeDoge.getaddressesbyaccount(account, (err, listaddr) => {
+      if (err) return res.status(400).json({ msg: "can not make address", log: -3 })
+      else {
+        let publickey = listaddr[0]
+        nodeDoge.getbalance(account, (err, balances) => {
+          if (err) throw res.status(400).json({ msg: "can not get balance", log: -1 })
+          else {
+            return res.status(200).json({
+              msg: "success", "publickey": publickey,
+              balance: balances,
+              log: 0
+            })
+          }
+        })
+      }
+    })
+  } catch (e) {
+    return res.status(404).json({
+      msg: "server error"
+    })
+  }
+})
+app.post("/api/listtransactions/web", (req, res) => {
+  console.log("api/listtransactions/web")
+  try {
+    let account = req.body.keys
+    nodeDoge.listtransactions(account, 1000000, (err, listtransactions) => {
+      if (err) throw res.status(500).json({ msg: "cannot get transaction list" })
+      else {
+        res.status(200).json({ msg: "success", list: listtransactions })
+      }
+    })
+  } catch {
+    return res.status(404).json({
+      msg: "server catch"
+    })
+  }
+})
+app.post("/api/sendfrom/web", (req, res) => {
+  let fromaccount = req.body.keys
+  let address = req.body.address
+  let amount = req.body.amount
+  try {
+    nodeDoge.getbalance(fromaccount, (err, balance) => {
+      if (err) throw res.status(500).json({ msg: "sendfrom err" })
+      else {
+        // console.log("balance",balance,"\n amount",amount + 0.1)
+        if (balance >= +amount + 0.1) {
+          nodeDoge.sendfrom(fromaccount, address, amount, (err, txids) => {
+            if (err) throw res.status(500).json({ msg: "sendfrom err" })
+            else {
+              res.status(200).json({
+                msg: "success",
+                txid: txids,
+                sendamount: amount
+              })
+            }
+          })
+        }else{
+          res.status(200).json({
+            msg: "dogecoin not enough"
+          })
+        }
+
+      }
+    })
+
+  } catch (e) {
+    return res.status(404).json({ msg: "err" })
+  }
+})
 
 app.post("/api/login/mnemonic", (req, res) => {
   console.log("/api/login/mnemonic")
@@ -274,15 +424,16 @@ app.post("/api/login/mnemonic", (req, res) => {
     MongoClient.connect(url, function (err, db) {
       if (err) throw err;
       var dbo = db.db("mydogecoin-wallet");
-      var query = { mnemonic: MD5(mnemonic) };
+      var query = { "mnemonic": MD5(mnemonic) };
       dbo.collection("register").find(query).toArray(function (err, result) {
         if (err) throw err;
         db.close();
         let data = []
         data.push(result.length)
         data.push(result)
-        console.log(data)
+        // console.log(data)
         db.close();
+        // console.log("data[0] =", mnemonic);
         if (data[0] == 1) {
           let date = new Date()
           let token = jwt.sign({ username: data[1][0].username, account: data[1][0].account, time: date.getTime() }, jwtsecret, { expiresIn: 60 * 30 });
@@ -343,7 +494,7 @@ app.post('/api/post/authen', async (req, resp) => {
   try {
     console.log()
     let token = req.headers.authorization.split('Bearer ')[1];
-    console.log(token)
+    // console.log(token)
     let decoded = jwt.verify(token, jwtsecret);
     return resp.status(200).json({
       status: 'ok',
@@ -368,11 +519,11 @@ async function get_all_register() {
   return result
 }
 
-function Registerdb(user, pass, account_name, S_reset = false, S_login = true) {
+function Registerdb(user, pass, account_name, S_reset = false) {
   MongoClient.connect(url, function (err, db) {
     if (err) throw err;
     var dbo = db.db("mydogecoin-wallet");
-    var myobj = { username: user, password: pass, account: account_name, status_reset: S_reset, status_login: S_login };
+    var myobj = { username: user, password: pass, account: account_name, status_reset: S_reset };
     dbo.collection("register").insertOne(myobj, function (err, res) {
       if (err) throw err;
       console.log("1 document inserted");
@@ -605,16 +756,14 @@ app.post('/api/sendFrom/', async (req, res) => {
       client.close();
       return result;
     }
-
     if (data[0] != 1) {
       console.log('password is incorrect')
-      return res.status(400).json({
+      return res.status(200).json({
         status: 'failed',
         msg: 'password is incorrect',
         log: 3
       })
     }
-
     let userid = data[1][0]["_id"]
     nodeDoge.sendfrom(fromaccount, toaccount, amount, async (err, txid) => {
       if (err) {
@@ -657,12 +806,12 @@ app.post('/api/sendFrom/', async (req, res) => {
               listtxid = [{ 'txid': txid, 'txdetail': detailstx, "cf": 0 }]
             }
             let newTX = { $set: { listtxid: listtxid } };
-             dbo.collection("userTXID").updateOne(query, newTX, function (err) {
+            dbo.collection("userTXID").updateOne(query, newTX, function (err) {
               if (err) throw err;
               console.log("1 document updated");
               client.close();
             });
-          
+
           })
         }
         let querylistLength = await transaction()
@@ -770,7 +919,7 @@ app.post("/api/listtransactions", async (req, res) => {
       let client = await MongoClient.connect(url)
       let dbo = client.db("mydogecoin-wallet");
       let arroflisttxid = []
-      console.log("length of arroflisttxid ", listtxid.length)
+      // console.log("length of arroflisttxid ", listtxid.length)
       for (let k = 0; k < listtxid.length; k++) {
         arroflisttxid.push(listtxid[k].txid)
       }
@@ -910,6 +1059,7 @@ app.post("/api/removeaccount", async function (req, res) {
   try {
     let token = req.body.token;
     let pwd = req.body.password;
+    // console.log("token: " + token)
     let decoded = jwt.verify(token, jwtsecret)
     console.log("username", decoded.username)
     let update = async () => {
@@ -929,7 +1079,6 @@ app.post("/api/removeaccount", async function (req, res) {
       });
       return true;
     }
-
     if (await update()) {
       nodeDoge.getbalance(decoded.account, function (err, balance) {
         if (err) {
@@ -941,7 +1090,7 @@ app.post("/api/removeaccount", async function (req, res) {
           console.log("balance===>", balance)
           nodeDoge.move(decoded.account, "", balance, (err, move) => {
             if (err) {
-              return res.status(500).json({
+              return res.status(200).json({
                 msg: err.message,
                 log: "err -2",
                 status: "err"
