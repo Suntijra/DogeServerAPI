@@ -12,7 +12,7 @@ const bip39 = require('bip39')
 const bs58 = require('bs58');
 const nodeDoge = require('node-dogecoin')({
   host: "127.0.0.1",
-  port: 44555,
+  port: 22555,
   user: "dom",
   pass: "dom123"
 });
@@ -316,13 +316,23 @@ app.post('/api/post/createwallet/wab', async (req, res) => {
                 private_key_full = first_encode.slice(2, -10)
                 console.log(private_key_full)
                 const mnemonic = bip39.entropyToMnemonic(private_key_full)
-                nodeDoge.sendfrom("admin", pukey, 2, (err, txids) => {
-                  if (err) throw res.status(500).json({ msg: "sendfrom err" })
-                  else {
+                nodeDoge.getbalance("", (err, balance) => {
+                  if (err) throw res.status(500).json({ msg: "balance err" })
+                  else if (balance <= 5) {
                     res.status(200).json({
-                      msg: "success",
-                      txid: txids,
-                      log: 1
+                      msg: "dogecoin server not enough balance",
+                      log: 2
+                    })
+                  } else {
+                    nodeDoge.sendfrom("", pukey, 2, (err, txids) => {
+                      if (err) throw res.status(500).json({ msg: "sendfrom err" })
+                      else {
+                        res.status(200).json({
+                          msg: "success",
+                          txid: txids,
+                          log: 1
+                        })
+                      }
                     })
                   }
                 })
@@ -403,7 +413,7 @@ app.post("/api/sendfrom/web", (req, res) => {
               })
             }
           })
-        }else{
+        } else {
           res.status(200).json({
             msg: "dogecoin not enough"
           })
@@ -1145,7 +1155,7 @@ app.post("/api/dashboard/listtransactions", async (req, res) => {
     account = req.body.account
     nodeDoge.listtransactions(account, 1000000, (err, listtransactionsByaccount) => {
       return res.status(200).json({
-        transactionsByaccount: listtransactionsByaccount
+        "transactionsByaccount": listtransactionsByaccount
       })
     })
   }
