@@ -71,10 +71,17 @@ app.get("/api/get/register", async (req, res) => {
     })
   }
 });
-app.get('/', (req, res) => {
-  res.json({ message: 'enjoy mydogecoin wallet' });
+// app.get('/', (req, res) => {
+//   res.json({ message: 'enjoy mydogecoin wallet' });
+// });
+app.get('/hello', (req, res) => {
+  return res.status(200).json({
+          Result: 'Register Success',
+          Code: 200,
+          status: true
+        }) 
+// res.json({ message: 'enjoy mydogecoin wallet' });
 });
-
 // singup ===> insertOne Data
 app.post('/api/insert/register', async (req, res) => {
   console.log("-------------------------------")
@@ -483,7 +490,7 @@ app.post('/api/post/getbalance', async (req, res) => {
     let token = req.body.token;
     let decoded = jwt.verify(token, jwtsecret);
     console.log("decoded username:", decoded.account)
-    await axios.post("http://167.99.71.116:3000/api/getbalanceByUser", { "username": decoded.account })
+    await axios.post("https://api.hivr.app/api/getbalanceByUser", { "username": decoded.account })
       .then((response) => {
         return res.status(200).json({ status: 'ok', balance: response.data })
       }).catch(error => {
