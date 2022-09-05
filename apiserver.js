@@ -200,7 +200,7 @@ app.post('/api/post/create-wallet', async (req, res) => {
     // console.log("decoded username:", decoded.account)
     nodeDoge.listaccounts(async (err, accountlist) => {
       if (err) {
-        return res.status(500).json({})
+        return res.status(500).json({'msg':"err"})
       }
       checkacc = async () => {
         let listacc = Object.keys(accountlist)
@@ -447,7 +447,6 @@ app.post("/api/login/mnemonic", (req, res) => {
         if (data[0] == 1) {
           let date = new Date()
           let token = jwt.sign({ username: data[1][0].username, account: data[1][0].account, time: date.getTime() }, jwtsecret, { expiresIn: 60 * 30 });
-
           nodeDoge.getaddressesbyaccount(data[1][0].account, (err, count) => {
             if (err) {
               console.log(err)
