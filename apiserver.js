@@ -781,75 +781,88 @@ app.post('/api/sendFrom/', async (req, res) => {
       })
     }
     let userid = data[1][0]["_id"]
-    nodeDoge.sendfrom(fromaccount, toaccount, amount, async (err, txid) => {
-      if (err) {
-        let msg = JSON.parse(err.message).error.message
-        return res.status(400).json({
-          status: 'Failed',
-          msg: msg,
-          log: 0
 
-        })
-      } else {
-        let update = async () => {
-          nodeDoge.gettransaction(txid, async (err, detailstx) => {
+
+    nodeDoge.getbalance(fromaccount, (err, balance) => {
+      if (err) throw res.status(500).json({ msg: "sendfrom err" })
+      else {
+        if (balance >= +amount + 0.1) {
+          nodeDoge.sendfrom(fromaccount, toaccount, amount, async (err, txid) => {
             if (err) {
               let msg = JSON.parse(err.message).error.message
               return res.status(400).json({
                 status: 'Failed',
                 msg: msg,
-                log: "error gettransaction"
-
+                log: 0
+      
+              })
+            } else {
+              let update = async () => {
+                nodeDoge.gettransaction(txid, async (err, detailstx) => {
+                  if (err) {
+                    let msg = JSON.parse(err.message).error.message
+                    return res.status(400).json({
+                      status: 'Failed',
+                      msg: msg,
+                      log: "error gettransaction"
+      
+                    })
+                  }
+      
+                  let querylisttx = await transaction()
+                  console.log("update TXID ...")
+                  let client = await MongoClient.connect(url)
+                  let dbo = await client.db("mydogecoin-wallet");
+                  let query = { userID: userid };
+                  let listtxid;
+                  // console.log("transaction list ===>", querylisttx[0])
+                  let prepush = querylisttx[0]['listtxid']
+                  // console.log('pre = >>>', prepush)
+                  if (Array.isArray(prepush)) {
+                    // console.log('isArray');
+      
+                    listtxid = prepush
+                    listtxid.push({ "txid": txid, "txdetail": detailstx, 'cf': 0 })
+                  } else {
+                    console.log("not is array")
+                    listtxid = [{ 'txid': txid, 'txdetail': detailstx, "cf": 0 }]
+                  }
+                  let newTX = { $set: { listtxid: listtxid } };
+                  dbo.collection("userTXID").updateOne(query, newTX, function (err) {
+                    if (err) throw err;
+                    console.log("1 document updated");
+                    client.close();
+                  });
+      
+                })
+              }
+              let querylistLength = await transaction()
+              if (querylistLength.length == 0) {
+                console.log("Make list Transactions ..... ")
+                let check = await makelistTXID_byUser(userid)
+                if (check) {
+                  await update()
+                }
+      
+              } else {
+                await update()
+              }
+              console.log("sent from account: " + fromaccount, " ===> ", fromaccount)
+              return res.status(200).json({
+                status: 'Success',
+                txid: txid,
+                log: 1,
+                msg: 'Success'
               })
             }
-
-            let querylisttx = await transaction()
-            console.log("update TXID ...")
-            let client = await MongoClient.connect(url)
-            let dbo = await client.db("mydogecoin-wallet");
-            let query = { userID: userid };
-            let listtxid;
-            // console.log("transaction list ===>", querylisttx[0])
-            let prepush = querylisttx[0]['listtxid']
-            // console.log('pre = >>>', prepush)
-            if (Array.isArray(prepush)) {
-              // console.log('isArray');
-
-              listtxid = prepush
-              listtxid.push({ "txid": txid, "txdetail": detailstx, 'cf': 0 })
-            } else {
-              console.log("not is array")
-              listtxid = [{ 'txid': txid, 'txdetail': detailstx, "cf": 0 }]
-            }
-            let newTX = { $set: { listtxid: listtxid } };
-            dbo.collection("userTXID").updateOne(query, newTX, function (err) {
-              if (err) throw err;
-              console.log("1 document updated");
-              client.close();
-            });
-
+      
+          })
+        } else {
+          res.status(200).json({
+            msg: "dogecoin not enough"
           })
         }
-        let querylistLength = await transaction()
-        if (querylistLength.length == 0) {
-          console.log("Make list Transactions ..... ")
-          let check = await makelistTXID_byUser(userid)
-          if (check) {
-            await update()
-          }
-
-        } else {
-          await update()
-        }
-        console.log("sent from account: " + fromaccount, " ===> ", fromaccount)
-        return res.status(200).json({
-          status: 'Success',
-          txid: txid,
-          log: 1,
-          msg: 'Success'
-        })
       }
-
     })
   } catch (error) {
     return res.status(404).json({ error: error, msg: "can't send from server", log: 2 });
