@@ -19,7 +19,7 @@ const nodeDoge = require('node-dogecoin')({
 
 // server Unit
 var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://dom:dom123@167.99.71.116:27017/?directConnection=true&appName=mongosh+1.5.0&authMechanism=DEFAULT";
+var url = "mongodb://dom:dom123@127.0.0.1:27017/?directConnection=true&appName=mongosh+1.5.0&authMechanism=DEFAULT";
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors())
